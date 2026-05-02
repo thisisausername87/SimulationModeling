@@ -43,3 +43,6 @@ replay_pid*
 .project
 .settings/
 nbproject/
+
+# OS-specific files
+.DS_Store

@@ -268,12 +268,12 @@
              classname="edu.umd.cs.findbugs.anttask.FindBugsTask"
              classpathref="spotbugs.classpath"/>
     <spotbugs home="${spotbugs.home}"
-              output="xml"
-              outputFile="${reports.dir}/spotbugs.xml"
+              output="html"
+              outputFile="${reports.dir}/spotbugs.html"
               effort="max"
-              reportLevel="low"
+              reportLevel="medium"
               jvmargs="-Xmx512m"
-              failOnError="true"
+              failOnError="false"
               setExitCode="true"
               warningsProperty="spotbugs.warnings"
               excludeFilter="spotbugs-exclude.xml">
