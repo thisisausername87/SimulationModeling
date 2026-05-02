@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  build.xml — Apache Ant build file for SimulationModeling
+  =========================================================
+  Requires: Apache Ant 1.10.6+, JDK 17+
+  JARs in lib/ are managed manually; run "ant resolve" once to download them.
+
+  Main targets
+  ============
+    resolve        Download JUnit 5 JARs to lib/ (run once)
+    compile        Compile main sources to build/classes
+    compile-tests  Compile test sources to build/test-classes
+    test           Run JUnit 5 tests; reports in build/reports
+    javadoc        Generate Javadoc into docs/
+    jar            Package compiled classes into build/simulation.jar
+    clean          Delete all generated files
+    all            clean → compile → test → javadoc → jar
+
+  Optional / commented-out targets
+  =================================
+    checkstyle     Style checker  (uncomment and add checkstyle jar to lib/)
+    spotbugs       Bug finder     (uncomment and add spotbugs jars to lib/)
+    pmd            PMD analyzer   (uncomment and add pmd jars to lib/)
+    jacoco         Code coverage  (uncomment and add jacoco jars to lib/)
+-->
+<project name="SimulationModeling" default="all" basedir="."
+         xmlns:junitlauncher="antlib:org.apache.tools.ant.taskdefs.optional.junitlauncher">
+
+  <!-- ============================================================ -->
+  <!-- Load configurable properties                                  -->
+  <!-- ============================================================ -->
+  <property file="build.properties"/>
+
+  <!-- Convenience path: all JARs in lib/ -->
+  <path id="lib.classpath">
+    <fileset dir="${lib.dir}" includes="*.jar"/>
+  </path>
+
+  <!-- Compilation classpath for main sources (no test deps needed) -->
+  <path id="compile.classpath">
+    <path refid="lib.classpath"/>
+  </path>
+
+  <!-- Compilation classpath for test sources -->
+  <path id="test.compile.classpath">
+    <pathelement location="${classes.dir}"/>
+    <path refid="lib.classpath"/>
+  </path>
+
+  <!-- Runtime classpath for running tests -->
+  <path id="test.run.classpath">
+    <pathelement location="${test.classes.dir}"/>
+    <pathelement location="${classes.dir}"/>
+    <path refid="lib.classpath"/>
+  </path>
+
+  <!-- ============================================================ -->
+  <!-- resolve: download JUnit 5 JARs from Maven Central            -->
+  <!-- Run this once after a fresh clone if lib/ is not committed.  -->
+  <!-- ============================================================ -->
+  <target name="resolve" description="Download JUnit 5 dependencies to lib/">
+    <mkdir dir="${lib.dir}"/>
+    <property name="mvn" value="https://repo1.maven.org/maven2"/>
+    <property name="ju.ver" value="5.10.2"/>
+    <property name="jp.ver" value="1.10.2"/>
+
+    <get dest="${lib.dir}" skipexisting="true" verbose="true">
+      <!-- JUnit Jupiter API (compile + test scope) -->
+      <url url="${mvn}/org/junit/jupiter/junit-jupiter-api/${ju.ver}/junit-jupiter-api-${ju.ver}.jar"/>
+      <!-- JUnit Jupiter Engine (runtime) -->
+      <url url="${mvn}/org/junit/jupiter/junit-jupiter-engine/${ju.ver}/junit-jupiter-engine-${ju.ver}.jar"/>
+      <!-- JUnit Platform Launcher -->
+      <url url="${mvn}/org/junit/platform/junit-platform-launcher/${jp.ver}/junit-platform-launcher-${jp.ver}.jar"/>
+      <!-- JUnit Platform Engine SPI -->
+      <url url="${mvn}/org/junit/platform/junit-platform-engine/${jp.ver}/junit-platform-engine-${jp.ver}.jar"/>
+      <!-- JUnit Platform Commons -->
+      <url url="${mvn}/org/junit/platform/junit-platform-commons/${jp.ver}/junit-platform-commons-${jp.ver}.jar"/>
+      <!-- OpenTest4J (assertion library used by JUnit) -->
+      <url url="${mvn}/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar"/>
+      <!-- API Guardian annotations -->
+      <url url="${mvn}/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar"/>
+    </get>
+  </target>
+
+  <!-- ============================================================ -->
+  <!-- clean: remove all generated files                            -->
+  <!-- ============================================================ -->
+  <target name="clean" description="Remove generated build artifacts">
+    <delete dir="${build.dir}"/>
+  </target>
+
+  <!-- ============================================================ -->
+  <!-- compile: compile main source files                           -->
+  <!-- ============================================================ -->
+  <target name="compile" description="Compile main source files">
+    <mkdir dir="${classes.dir}"/>
+    <javac srcdir="${src.main.dir}"
+           destdir="${classes.dir}"
+           source="${java.source.version}"
+           target="${java.target.version}"
+           encoding="UTF-8"
+           includeantruntime="false"
+           debug="true"
+           deprecation="true">
+      <classpath refid="compile.classpath"/>
+    </javac>
+  </target>
+
+  <!-- ============================================================ -->
+  <!-- compile-tests: compile test source files                     -->
+  <!-- ============================================================ -->
+  <target name="compile-tests" depends="compile"
+          description="Compile JUnit 5 test source files">
+    <mkdir dir="${test.classes.dir}"/>
+    <javac srcdir="${src.test.dir}"
+           destdir="${test.classes.dir}"
+           source="${java.source.version}"
+           target="${java.target.version}"
+           encoding="UTF-8"
+           includeantruntime="false"
+           debug="true">
+      <classpath refid="test.compile.classpath"/>
+    </javac>
+  </target>
+
+  <!-- ============================================================ -->
+  <!-- test: run JUnit 5 tests via the junitlauncher task           -->
+  <!-- ============================================================ -->
+  <target name="test" depends="compile-tests"
+          description="Run JUnit 5 tests and generate reports">
+    <mkdir dir="${reports.dir}"/>
+
+    <junitlauncher haltOnFailure="true" printSummary="true">
+      <classpath refid="test.run.classpath"/>
+      <testclasses outputdir="${reports.dir}">
+        <fileset dir="${test.classes.dir}" includes="**/*Test.class"/>
+        <!-- XML report (compatible with CI tools) -->
+        <listener type="legacy-xml"
+                  sendSysOut="true"
+                  sendSysErr="true"/>
+        <!-- Plain-text summary to stdout -->
+        <listener type="legacy-plain"
+                  sendSysOut="true"/>
+      </testclasses>
+    </junitlauncher>
+  </target>
+
+  <!-- ============================================================ -->
+  <!-- javadoc: generate API documentation into docs/               -->
+  <!-- ============================================================ -->
+  <target name="javadoc" depends="compile"
+          description="Generate Javadoc API documentation">
+    <mkdir dir="${javadoc.dir}"/>
+    <javadoc sourcepath="${src.main.dir}"
+             destdir="${javadoc.dir}"
+             packagenames="simulation.*"
+             author="true"
+             version="true"
+             use="true"
+             windowtitle="${project.name} ${project.version} API"
+             doctitle="${project.name} ${project.version}"
+             encoding="UTF-8"
+             charset="UTF-8"
+             docencoding="UTF-8"
+             failonerror="true">
+      <classpath refid="compile.classpath"/>
+    </javadoc>
+  </target>
+
+  <!-- ============================================================ -->
+  <!-- jar: package compiled classes into a JAR file                -->
+  <!-- ============================================================ -->
+  <target name="jar" depends="compile"
+          description="Package compiled classes into ${jar.file}">
+    <jar destfile="${jar.file}"
+         basedir="${classes.dir}">
+      <manifest>
+        <attribute name="Implementation-Title"   value="${project.name}"/>
+        <attribute name="Implementation-Version" value="${project.version}"/>
+      </manifest>
+    </jar>
+  </target>
+
+  <!-- ============================================================ -->
+  <!-- all: full build pipeline                                     -->
+  <!-- ============================================================ -->
+  <target name="all" depends="clean,compile,test,javadoc,jar"
+          description="Clean, compile, test, build Javadoc, and create JAR"/>
+
+  <!-- ============================================================ -->
+  <!-- OPTIONAL: Checkstyle style analysis                          -->
+  <!-- To enable:                                                   -->
+  <!--   1. Download checkstyle-X.Y-all.jar to lib/                -->
+  <!--   2. Create checkstyle.xml in the project root               -->
+  <!--   3. Uncomment the target below                              -->
+  <!-- ============================================================ -->
+  <!--
+  <target name="checkstyle" depends="compile"
+          description="Run Checkstyle style analysis">
+    <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties"
+             classpath="${lib.dir}/checkstyle-all.jar"/>
+    <checkstyle config="checkstyle.xml" failOnViolation="true">
+      <fileset dir="${src.main.dir}" includes="**/*.java"/>
+      <formatter type="plain"/>
+      <formatter type="xml" tofile="${reports.dir}/checkstyle.xml"/>
+    </checkstyle>
+  </target>
+  -->
+
+  <!-- ============================================================ -->
+  <!-- OPTIONAL: SpotBugs static analysis                           -->
+  <!-- To enable:                                                   -->
+  <!--   1. Download spotbugs-X.Y.Z.zip; extract jars to lib/      -->
+  <!--   2. Uncomment the target below                              -->
+  <!-- ============================================================ -->
+  <!--
+  <target name="spotbugs" depends="jar"
+          description="Run SpotBugs static analysis">
+    <taskdef name="spotbugs"
+             classname="edu.umd.cs.findbugs.anttask.FindBugsTask"
+             classpath="${lib.dir}/spotbugs-ant.jar"/>
+    <spotbugs home="${lib.dir}"
+              output="xml"
+              outputFile="${reports.dir}/spotbugs.xml"
+              jvmargs="-Xmx512m"
+              failOnError="true">
+      <auxClasspath refid="lib.classpath"/>
+      <sourcePath path="${src.main.dir}"/>
+      <class location="${jar.file}"/>
+    </spotbugs>
+  </target>
+  -->
+
+  <!-- ============================================================ -->
+  <!-- OPTIONAL: PMD source code analysis                           -->
+  <!-- To enable:                                                   -->
+  <!--   1. Download pmd-bin-X.Y.Z.zip; extract jars to lib/       -->
+  <!--   2. Uncomment the target below                              -->
+  <!-- ============================================================ -->
+  <!--
+  <target name="pmd" description="Run PMD source code analysis">
+    <taskdef name="pmd"
+             classname="net.sourceforge.pmd.ant.PMDTask"
+             classpath="${lib.dir}/pmd-ant.jar"/>
+    <pmd rulesetfiles="rulesets/java/quickstart.xml"
+         failOnRuleViolation="false">
+      <formatter type="xml" toFile="${reports.dir}/pmd.xml"/>
+      <fileset dir="${src.main.dir}" includes="**/*.java"/>
+    </pmd>
+  </target>
+  -->
+
+  <!-- ============================================================ -->
+  <!-- OPTIONAL: JaCoCo code coverage                               -->
+  <!-- To enable:                                                   -->
+  <!--   1. Download jacocoant.jar and jacoco.jar to lib/           -->
+  <!--   2. Uncomment the targets below                             -->
+  <!--   3. Replace the plain "test" dependency in "coverage"       -->
+  <!--      with the instrumented variant if desired                -->
+  <!-- ============================================================ -->
+  <!--
+  <target name="coverage" depends="compile-tests"
+          description="Run tests with JaCoCo coverage instrumentation">
+    <taskdef uri="antlib:org.jacoco.ant"
+             resource="org/jacoco/ant/antlib.xml"
+             classpath="${lib.dir}/jacocoant.jar"/>
+
+    <jacoco:coverage destfile="${reports.dir}/jacoco.exec">
+      <junitlauncher haltOnFailure="true" printSummary="true">
+        <classpath refid="test.run.classpath"/>
+        <testclasses outputdir="${reports.dir}">
+          <fileset dir="${test.classes.dir}" includes="**/*Test.class"/>
+          <listener type="legacy-xml" sendSysOut="true" sendSysErr="true"/>
+        </testclasses>
+      </junitlauncher>
+    </jacoco:coverage>
+
+    <jacoco:report>
+      <executiondata>
+        <file file="${reports.dir}/jacoco.exec"/>
+      </executiondata>
+      <structure name="${project.name}">
+        <classfiles>
+          <fileset dir="${classes.dir}"/>
+        </classfiles>
+        <sourcefiles encoding="UTF-8">
+          <fileset dir="${src.main.dir}"/>
+        </sourcefiles>
+      </structure>
+      <html destdir="${reports.dir}/coverage"/>
+      <xml destfile="${reports.dir}/jacoco.xml"/>
+    </jacoco:report>
+  </target>
+  -->
+
+</project>
