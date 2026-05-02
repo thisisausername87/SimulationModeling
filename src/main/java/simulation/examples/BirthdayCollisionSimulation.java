@@ -16,7 +16,7 @@ import simulation.Simulation;
  * java -cp build/classes simulation.examples.BirthdayCollisionSimulation 23
  * }</pre>
  */
-public class BirthdayCollisionSimulation extends Simulation {
+public final class BirthdayCollisionSimulation extends Simulation {
 
     /** Number of possible birthdays when leap years are ignored. */
     public static final int DAYS_IN_YEAR = 365;
@@ -38,36 +38,30 @@ public class BirthdayCollisionSimulation extends Simulation {
      * @param trialCount number of independent trials to run
      */
     public BirthdayCollisionSimulation(int groupSize, int trialCount) {
-        this(groupSize, trialCount, new Random());
+        this(groupSize, trialCount, java.util.concurrent.ThreadLocalRandom.current().nextLong());
     }
 
     /**
-     * Creates a simulation with an injected random number generator.
-     *
-     * <p>Providing a seeded {@link Random} makes results reproducible for tests
-     * or demonstrations.
+     * Creates a simulation with a specific random number generator seed.
      *
      * @param groupSize number of people in each trial group
      * @param trialCount number of independent trials to run
-     * @param random source of random birthdays
+     * @param seed specific seed value for random source of random birthdays
      * @throws IllegalArgumentException if {@code groupSize} or {@code trialCount}
      *         is less than one
      * @throws NullPointerException if {@code random} is {@code null}
      */
-    public BirthdayCollisionSimulation(int groupSize, int trialCount, Random random) {
+    public BirthdayCollisionSimulation(int groupSize, int trialCount, long seed) {
         if (groupSize < 1) {
             throw new IllegalArgumentException("Group size must be at least one: " + groupSize);
         }
         if (trialCount < 1) {
             throw new IllegalArgumentException("Trial count must be at least one: " + trialCount);
         }
-        if (random == null) {
-            throw new NullPointerException("Random generator must not be null");
-        }
 
         this.groupSize = groupSize;
         this.trialCount = trialCount;
-        this.random = random;
+        this.random = new Random(seed);
     }
 
     /**
@@ -101,7 +95,7 @@ public class BirthdayCollisionSimulation extends Simulation {
      * {@code 0} through {@code 364}.
      *
      * @param groupSize number of birthdays to generate
-     * @param random source of random birthdays
+     * @param random  the source of random birthdays
      * @return {@code true} when any birthday appears more than once
      * @throws IllegalArgumentException if {@code groupSize} is less than one
      * @throws NullPointerException if {@code random} is {@code null}
@@ -109,9 +103,6 @@ public class BirthdayCollisionSimulation extends Simulation {
     public static boolean hasSharedBirthday(int groupSize, Random random) {
         if (groupSize < 1) {
             throw new IllegalArgumentException("Group size must be at least one: " + groupSize);
-        }
-        if (random == null) {
-            throw new NullPointerException("Random generator must not be null");
         }
 
         boolean[] observedBirthdays = new boolean[DAYS_IN_YEAR];
@@ -180,7 +171,7 @@ public class BirthdayCollisionSimulation extends Simulation {
     }
 
     private void runTrial() {
-        if (hasSharedBirthday(groupSize, random)) {
+        if (hasSharedBirthday(groupSize, this.random)) {
             collisionCount++;
         }
         completedTrials++;

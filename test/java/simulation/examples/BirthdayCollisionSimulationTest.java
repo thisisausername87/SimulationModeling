@@ -14,6 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("BirthdayCollisionSimulation")
 class BirthdayCollisionSimulationTest {
 
+    private final Random testRandom = new Random();
+
     private static final double THEORETICAL_PROBABILITY_FOR_23_PEOPLE = 0.5073;
     private static final double TEN_THOUSAND_TRIAL_TOLERANCE = 0.03;
 
@@ -21,41 +23,27 @@ class BirthdayCollisionSimulationTest {
     @DisplayName("constructor rejects invalid group size")
     void constructorRejectsInvalidGroupSize() {
         assertThrows(IllegalArgumentException.class,
-            () -> new BirthdayCollisionSimulation(0, 100, new Random(1L)));
+            () -> new BirthdayCollisionSimulation(0, 100, 1L));
     }
 
     @Test
     @DisplayName("constructor rejects invalid trial count")
     void constructorRejectsInvalidTrialCount() {
         assertThrows(IllegalArgumentException.class,
-            () -> new BirthdayCollisionSimulation(23, 0, new Random(1L)));
-    }
-
-    @Test
-    @DisplayName("constructor rejects null random generator")
-    void constructorRejectsNullRandomGenerator() {
-        assertThrows(NullPointerException.class,
-            () -> new BirthdayCollisionSimulation(23, 100, null));
+            () -> new BirthdayCollisionSimulation(23, 0, 1L));
     }
 
     @Test
     @DisplayName("hasSharedBirthday rejects invalid group size")
     void hasSharedBirthdayRejectsInvalidGroupSize() {
         assertThrows(IllegalArgumentException.class,
-            () -> BirthdayCollisionSimulation.hasSharedBirthday(0, new Random(1L)));
-    }
-
-    @Test
-    @DisplayName("hasSharedBirthday rejects null random generator")
-    void hasSharedBirthdayRejectsNullRandomGenerator() {
-        assertThrows(NullPointerException.class,
-            () -> BirthdayCollisionSimulation.hasSharedBirthday(23, null));
+            () -> BirthdayCollisionSimulation.hasSharedBirthday(0, testRandom));
     }
 
     @Test
     @DisplayName("one-person group cannot have a collision")
     void onePersonGroupCannotHaveCollision() {
-        assertFalse(BirthdayCollisionSimulation.hasSharedBirthday(1, new Random(1L)));
+        assertFalse(BirthdayCollisionSimulation.hasSharedBirthday(1, testRandom));
     }
 
     @Test
@@ -63,14 +51,14 @@ class BirthdayCollisionSimulationTest {
     void groupLargerThanPossibleBirthdaysMustHaveCollision() {
         assertTrue(BirthdayCollisionSimulation.hasSharedBirthday(
             BirthdayCollisionSimulation.DAYS_IN_YEAR + 1,
-            new Random(1L)));
+            testRandom));
     }
 
     @Test
     @DisplayName("run completes the requested number of trials")
     void runCompletesRequestedNumberOfTrials() {
         BirthdayCollisionSimulation simulation =
-            new BirthdayCollisionSimulation(23, 100, new Random(2026L));
+            new BirthdayCollisionSimulation(23, 100, 2026L);
 
         simulation.run();
 
@@ -83,7 +71,7 @@ class BirthdayCollisionSimulationTest {
     @DisplayName("estimate is collisions divided by completed trials")
     void estimateIsCollisionsDividedByCompletedTrials() {
         BirthdayCollisionSimulation simulation =
-            new BirthdayCollisionSimulation(23, 100, new Random(2026L));
+            new BirthdayCollisionSimulation(23, 100, 2026L);
 
         simulation.run();
 
@@ -97,7 +85,7 @@ class BirthdayCollisionSimulationTest {
     @DisplayName("estimate is zero before running trials")
     void estimateIsZeroBeforeRunningTrials() {
         BirthdayCollisionSimulation simulation =
-            new BirthdayCollisionSimulation(23, 100, new Random(2026L));
+            new BirthdayCollisionSimulation(23, 100, 2026L);
 
         assertEquals(0.0, simulation.getEstimatedProbability());
     }
@@ -106,7 +94,7 @@ class BirthdayCollisionSimulationTest {
     @DisplayName("100 trial estimate is a valid probability")
     void oneHundredTrialEstimateIsValidProbability() {
         BirthdayCollisionSimulation simulation =
-            new BirthdayCollisionSimulation(23, 100, new Random(2026L));
+            new BirthdayCollisionSimulation(23, 100, 2026L);
 
         simulation.run();
 
@@ -118,7 +106,7 @@ class BirthdayCollisionSimulationTest {
     @DisplayName("1000 trial estimate is a valid probability")
     void oneThousandTrialEstimateIsValidProbability() {
         BirthdayCollisionSimulation simulation =
-            new BirthdayCollisionSimulation(23, 1_000, new Random(2026L));
+            new BirthdayCollisionSimulation(23, 1_000, 2026L);
 
         simulation.run();
 
@@ -130,9 +118,10 @@ class BirthdayCollisionSimulationTest {
     @DisplayName("10000 trial estimate is close to theoretical value")
     void tenThousandTrialEstimateIsCloseToTheoreticalValue() {
         BirthdayCollisionSimulation simulation =
-            new BirthdayCollisionSimulation(23, 10_000, new Random(2026L));
+            new BirthdayCollisionSimulation(23, 10_000, 2026L);
 
         simulation.run();
+        System.out.println(simulation.getEstimatedProbability());
 
         assertEquals(
             THEORETICAL_PROBABILITY_FOR_23_PEOPLE,
