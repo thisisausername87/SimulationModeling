@@ -282,7 +282,7 @@
       <class location="${jar.file}"/>
     </spotbugs>
     <fail if="spotbugs.warnings"
-          message="SpotBugs found warnings; see ${reports.dir}/spotbugs.xml"/>
+          message="SpotBugs found warnings; see ${reports.dir}/spotbugs.html"/>
   </target>
 
   <!-- ============================================================ -->
