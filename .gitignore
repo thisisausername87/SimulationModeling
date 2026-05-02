@@ -21,6 +21,8 @@
 # JAR files everywhere EXCEPT lib/
 *.jar
 !lib/*.jar
+lib/tools/
+tools-cache/
 
 # Ant build output
 build/

@@ -62,7 +62,7 @@ public class Statistics {
     /**
      * Resets all accumulators, discarding previous observations.
      */
-    public void reset() {
+    public final void reset() {
         count = 0;
         sum = 0.0;
         sumSquares = 0.0;

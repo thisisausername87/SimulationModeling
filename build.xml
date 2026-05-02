@@ -3,7 +3,8 @@
   build.xml — Apache Ant build file for SimulationModeling
   =========================================================
   Requires: Apache Ant 1.10.6+, JDK 17+
-  JARs in lib/ are managed manually; run "ant resolve" once to download them.
+  JUnit JARs in lib/ are committed for classroom convenience. Quality tool
+  distributions are downloaded on demand to lib/tools/ by "ant resolve-tools".
 
   Main targets
   ============
@@ -13,18 +14,17 @@
     test           Run JUnit 5 tests; reports in build/reports
     javadoc        Generate Javadoc into docs/
     jar            Package compiled classes into build/simulation.jar
+    checkstyle     Run style checks
+    pmd            Run PMD source analysis
+    spotbugs       Run SpotBugs bytecode analysis
+    coverage       Run tests with JaCoCo coverage
+    quality        Run tests plus all quality tools
     clean          Delete all generated files
-    all            clean → compile → test → javadoc → jar
-
-  Optional / commented-out targets
-  =================================
-    checkstyle     Style checker  (uncomment and add checkstyle jar to lib/)
-    spotbugs       Bug finder     (uncomment and add spotbugs jars to lib/)
-    pmd            PMD analyzer   (uncomment and add pmd jars to lib/)
-    jacoco         Code coverage  (uncomment and add jacoco jars to lib/)
+    all            clean → quality → javadoc → jar
 -->
 <project name="SimulationModeling" default="all" basedir="."
-         xmlns:junitlauncher="antlib:org.apache.tools.ant.taskdefs.optional.junitlauncher">
+         xmlns:junitlauncher="antlib:org.apache.tools.ant.taskdefs.optional.junitlauncher"
+         xmlns:jacoco="antlib:org.jacoco.ant">
 
   <!-- ============================================================ -->
   <!-- Load configurable properties                                  -->
@@ -34,6 +34,23 @@
   <!-- Convenience path: all JARs in lib/ -->
   <path id="lib.classpath">
     <fileset dir="${lib.dir}" includes="*.jar"/>
+  </path>
+
+  <!-- Optional quality tool classpaths. Run "ant resolve-tools" first. -->
+  <path id="checkstyle.classpath">
+    <pathelement location="${checkstyle.jar}"/>
+  </path>
+
+  <path id="spotbugs.classpath">
+    <fileset dir="${spotbugs.home}/lib" includes="*.jar"/>
+  </path>
+
+  <path id="pmd.classpath">
+    <fileset dir="${pmd.home}/lib" includes="*.jar"/>
+  </path>
+
+  <path id="jacoco.classpath">
+    <pathelement location="${jacoco.ant.jar}"/>
   </path>
 
   <!-- Compilation classpath for main sources (no test deps needed) -->
@@ -83,6 +100,45 @@
   </target>
 
   <!-- ============================================================ -->
+  <!-- resolve-tools: download optional quality tools               -->
+  <!-- ============================================================ -->
+  <target name="resolve-tools"
+          description="Download Checkstyle, SpotBugs, PMD, JaCoCo, and JUnit Console">
+    <mkdir dir="${downloads.dir}"/>
+    <mkdir dir="${tools.dir}/checkstyle"/>
+    <mkdir dir="${tools.dir}/junit"/>
+
+    <get src="https://github.com/checkstyle/checkstyle/releases/download/checkstyle-${checkstyle.version}/checkstyle-${checkstyle.version}-all.jar"
+         dest="${checkstyle.jar}"
+         skipexisting="true"/>
+
+    <get src="https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/${junit.platform.version}/junit-platform-console-standalone-${junit.platform.version}.jar"
+         dest="${junit.console.jar}"
+         skipexisting="true"/>
+
+    <get src="https://github.com/spotbugs/spotbugs/releases/download/${spotbugs.version}/spotbugs-${spotbugs.version}.zip"
+         dest="${downloads.dir}/spotbugs-${spotbugs.version}.zip"
+         skipexisting="true"/>
+    <unzip src="${downloads.dir}/spotbugs-${spotbugs.version}.zip"
+           dest="${tools.dir}/spotbugs"
+           overwrite="false"/>
+
+    <get src="https://github.com/pmd/pmd/releases/download/pmd_releases%2F${pmd.version}/pmd-dist-${pmd.version}-bin.zip"
+         dest="${downloads.dir}/pmd-dist-${pmd.version}-bin.zip"
+         skipexisting="true"/>
+    <unzip src="${downloads.dir}/pmd-dist-${pmd.version}-bin.zip"
+           dest="${tools.dir}/pmd"
+           overwrite="false"/>
+
+    <get src="https://github.com/jacoco/jacoco/releases/download/v${jacoco.version}/jacoco-${jacoco.version}.zip"
+         dest="${downloads.dir}/jacoco-${jacoco.version}.zip"
+         skipexisting="true"/>
+    <unzip src="${downloads.dir}/jacoco-${jacoco.version}.zip"
+           dest="${jacoco.home}"
+           overwrite="false"/>
+  </target>
+
+  <!-- ============================================================ -->
   <!-- clean: remove all generated files                            -->
   <!-- ============================================================ -->
   <target name="clean" description="Remove generated build artifacts">
@@ -96,8 +152,7 @@
     <mkdir dir="${classes.dir}"/>
     <javac srcdir="${src.main.dir}"
            destdir="${classes.dir}"
-           source="${java.source.version}"
-           target="${java.target.version}"
+           release="${java.release.version}"
            encoding="UTF-8"
            includeantruntime="false"
            debug="true"
@@ -114,8 +169,7 @@
     <mkdir dir="${test.classes.dir}"/>
     <javac srcdir="${src.test.dir}"
            destdir="${test.classes.dir}"
-           source="${java.source.version}"
-           target="${java.target.version}"
+           release="${java.release.version}"
            encoding="UTF-8"
            includeantruntime="false"
            debug="true">
@@ -185,100 +239,101 @@
   <!-- ============================================================ -->
   <!-- all: full build pipeline                                     -->
   <!-- ============================================================ -->
-  <target name="all" depends="clean,compile,test,javadoc,jar"
-          description="Clean, compile, test, build Javadoc, and create JAR"/>
+  <target name="all" depends="clean,quality,javadoc,jar"
+          description="Clean, run quality checks, build Javadoc, and create JAR"/>
 
   <!-- ============================================================ -->
-  <!-- OPTIONAL: Checkstyle style analysis                          -->
-  <!-- To enable:                                                   -->
-  <!--   1. Download checkstyle-X.Y-all.jar to lib/                -->
-  <!--   2. Create checkstyle.xml in the project root               -->
-  <!--   3. Uncomment the target below                              -->
+  <!-- checkstyle: style analysis                                   -->
   <!-- ============================================================ -->
-  <!--
-  <target name="checkstyle" depends="compile"
+  <target name="checkstyle" depends="resolve-tools,compile"
           description="Run Checkstyle style analysis">
+    <mkdir dir="${reports.dir}"/>
     <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties"
-             classpath="${lib.dir}/checkstyle-all.jar"/>
+             classpathref="checkstyle.classpath"/>
     <checkstyle config="checkstyle.xml" failOnViolation="true">
       <fileset dir="${src.main.dir}" includes="**/*.java"/>
+      <fileset dir="${src.test.dir}" includes="**/*.java"/>
       <formatter type="plain"/>
       <formatter type="xml" tofile="${reports.dir}/checkstyle.xml"/>
     </checkstyle>
   </target>
-  -->
 
   <!-- ============================================================ -->
-  <!-- OPTIONAL: SpotBugs static analysis                           -->
-  <!-- To enable:                                                   -->
-  <!--   1. Download spotbugs-X.Y.Z.zip; extract jars to lib/      -->
-  <!--   2. Uncomment the target below                              -->
+  <!-- spotbugs: static bug analysis                                -->
   <!-- ============================================================ -->
-  <!--
-  <target name="spotbugs" depends="jar"
+  <target name="spotbugs" depends="resolve-tools,jar"
           description="Run SpotBugs static analysis">
+    <mkdir dir="${reports.dir}"/>
     <taskdef name="spotbugs"
              classname="edu.umd.cs.findbugs.anttask.FindBugsTask"
-             classpath="${lib.dir}/spotbugs-ant.jar"/>
-    <spotbugs home="${lib.dir}"
+             classpathref="spotbugs.classpath"/>
+    <spotbugs home="${spotbugs.home}"
               output="xml"
               outputFile="${reports.dir}/spotbugs.xml"
+              effort="max"
+              reportLevel="low"
               jvmargs="-Xmx512m"
-              failOnError="true">
+              failOnError="true"
+              setExitCode="true"
+              warningsProperty="spotbugs.warnings"
+              excludeFilter="spotbugs-exclude.xml">
       <auxClasspath refid="lib.classpath"/>
       <sourcePath path="${src.main.dir}"/>
       <class location="${jar.file}"/>
     </spotbugs>
+    <fail if="spotbugs.warnings"
+          message="SpotBugs found warnings; see ${reports.dir}/spotbugs.xml"/>
   </target>
-  -->
 
   <!-- ============================================================ -->
-  <!-- OPTIONAL: PMD source code analysis                           -->
-  <!-- To enable:                                                   -->
-  <!--   1. Download pmd-bin-X.Y.Z.zip; extract jars to lib/       -->
-  <!--   2. Uncomment the target below                              -->
+  <!-- pmd: source code analysis                                    -->
   <!-- ============================================================ -->
-  <!--
-  <target name="pmd" description="Run PMD source code analysis">
+  <target name="pmd" depends="resolve-tools"
+          description="Run PMD source code analysis">
+    <mkdir dir="${reports.dir}"/>
     <taskdef name="pmd"
              classname="net.sourceforge.pmd.ant.PMDTask"
-             classpath="${lib.dir}/pmd-ant.jar"/>
-    <pmd rulesetfiles="rulesets/java/quickstart.xml"
-         failOnRuleViolation="false">
+             classpathref="pmd.classpath"/>
+    <pmd rulesetfiles="pmd-ruleset.xml"
+         failOnRuleViolation="true">
       <formatter type="xml" toFile="${reports.dir}/pmd.xml"/>
       <fileset dir="${src.main.dir}" includes="**/*.java"/>
+      <fileset dir="${src.test.dir}" includes="**/*.java"/>
     </pmd>
   </target>
-  -->
 
   <!-- ============================================================ -->
-  <!-- OPTIONAL: JaCoCo code coverage                               -->
-  <!-- To enable:                                                   -->
-  <!--   1. Download jacocoant.jar and jacoco.jar to lib/           -->
-  <!--   2. Uncomment the targets below                             -->
-  <!--   3. Replace the plain "test" dependency in "coverage"       -->
-  <!--      with the instrumented variant if desired                -->
+  <!-- coverage: JaCoCo code coverage                               -->
   <!-- ============================================================ -->
-  <!--
-  <target name="coverage" depends="compile-tests"
+  <target name="coverage" depends="resolve-tools,compile-tests"
           description="Run tests with JaCoCo coverage instrumentation">
     <taskdef uri="antlib:org.jacoco.ant"
              resource="org/jacoco/ant/antlib.xml"
-             classpath="${lib.dir}/jacocoant.jar"/>
+             classpathref="jacoco.classpath"/>
 
-    <jacoco:coverage destfile="${reports.dir}/jacoco.exec">
-      <junitlauncher haltOnFailure="true" printSummary="true">
-        <classpath refid="test.run.classpath"/>
-        <testclasses outputdir="${reports.dir}">
-          <fileset dir="${test.classes.dir}" includes="**/*Test.class"/>
-          <listener type="legacy-xml" sendSysOut="true" sendSysErr="true"/>
-        </testclasses>
-      </junitlauncher>
-    </jacoco:coverage>
+    <jacoco:agent property="jacoco.agent.arg"
+                  destfile="${jacoco.exec.file}"
+                  includes="simulation.*"/>
+
+    <java classname="org.junit.platform.console.ConsoleLauncher"
+          fork="true"
+          failonerror="true">
+      <jvmarg line="${jacoco.agent.arg}"/>
+      <classpath>
+        <pathelement location="${junit.console.jar}"/>
+        <pathelement location="${test.classes.dir}"/>
+        <pathelement location="${classes.dir}"/>
+      </classpath>
+      <arg value="execute"/>
+      <arg value="--class-path"/>
+      <arg path="${test.classes.dir}${path.separator}${classes.dir}"/>
+      <arg value="--scan-class-path"/>
+      <arg value="${test.classes.dir}"/>
+    </java>
 
     <jacoco:report>
       <executiondata>
-        <file file="${reports.dir}/jacoco.exec"/>
+        <file file="${jacoco.exec.file}"/>
       </executiondata>
       <structure name="${project.name}">
         <classfiles>
@@ -292,6 +347,11 @@
       <xml destfile="${reports.dir}/jacoco.xml"/>
     </jacoco:report>
   </target>
-  -->
+
+  <!-- ============================================================ -->
+  <!-- quality: run every verification tool                         -->
+  <!-- ============================================================ -->
+  <target name="quality" depends="test,checkstyle,pmd,spotbugs,coverage"
+          description="Run tests, style checks, static analysis, and coverage"/>
 
 </project>

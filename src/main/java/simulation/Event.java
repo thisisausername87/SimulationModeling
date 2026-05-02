@@ -1,5 +1,7 @@
 package simulation;
 
+import java.util.Objects;
+
 /**
  * Abstract base class for discrete-event simulation events.
  *
@@ -68,6 +70,34 @@ public abstract class Event implements Comparable<Event> {
     @Override
     public int compareTo(Event other) {
         return Double.compare(this.time, other.time);
+    }
+
+    /**
+     * Compares events by concrete event type and scheduled time.
+     *
+     * @param obj the object to compare with this event
+     * @return {@code true} when both events have the same type and time
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        Event other = (Event) obj;
+        return Double.compare(time, other.time) == 0;
+    }
+
+    /**
+     * Returns a hash code consistent with {@link #equals(Object)}.
+     *
+     * @return hash code for this event
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(getClass(), time);
     }
 
     /**
