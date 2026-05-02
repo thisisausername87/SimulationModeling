@@ -121,7 +121,6 @@ class BirthdayCollisionSimulationTest {
             new BirthdayCollisionSimulation(23, 10_000, 2026L);
 
         simulation.run();
-        System.out.println(simulation.getEstimatedProbability());
 
         assertEquals(
             THEORETICAL_PROBABILITY_FOR_23_PEOPLE,

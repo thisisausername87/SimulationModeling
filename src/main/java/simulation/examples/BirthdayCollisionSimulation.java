@@ -49,7 +49,6 @@ public final class BirthdayCollisionSimulation extends Simulation {
      * @param seed specific seed value for random source of random birthdays
      * @throws IllegalArgumentException if {@code groupSize} or {@code trialCount}
      *         is less than one
-     * @throws NullPointerException if {@code random} is {@code null}
      */
     public BirthdayCollisionSimulation(int groupSize, int trialCount, long seed) {
         if (groupSize < 1) {
