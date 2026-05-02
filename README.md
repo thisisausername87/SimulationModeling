@@ -68,8 +68,9 @@ cd SimulationModeling
 # 2. Compile and run tests
 ant test
 
-# 3. Try the small example simulation
+# 3. Try the small example simulations
 java -cp build/classes simulation.examples.CountdownSimulation
+java -cp build/classes simulation.examples.BirthdayCollisionSimulation 23
 
 # 4. Run the full quality pipeline
 ant quality
@@ -122,15 +123,21 @@ public class QueueingSimulation extends Simulation {
 ```
 
 See `src/main/java/simulation/examples/CountdownSimulation.java` for a
-complete runnable example.
+complete runnable example of scheduling events.
+
+See `src/main/java/simulation/examples/BirthdayCollisionSimulation.java` for a
+Monte Carlo example that estimates the probability of at least two people
+sharing a birthday in a group of size `k`. It runs the estimate for 100, 1,000,
+and 10,000 trials.
 
 ## Suggested First Student Tasks
 
 1. Run `ant test` and confirm all tests pass.
 2. Run `simulation.examples.CountdownSimulation`.
-3. Change the countdown length and rerun the example.
-4. Create a new simulation package for your assigned model.
-5. Add tests for any behavior you add or change.
+3. Run `simulation.examples.BirthdayCollisionSimulation` with a few group sizes.
+4. Change an example parameter and rerun the example.
+5. Create a new simulation package for your assigned model.
+6. Add tests for any behavior you add or change.
 
 ## Repository Hygiene
 
