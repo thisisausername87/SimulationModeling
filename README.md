@@ -48,11 +48,17 @@ SimulationModeling/
 | `ant test` | Compile and run JUnit 5 tests |
 | `ant javadoc` | Generate API docs in `docs/` |
 | `ant jar` | Package classes into `build/simulation.jar` |
-| `ant all` | Full pipeline: clean → compile → test → javadoc → jar |
+| `ant checkstyle` | Run style checks |
+| `ant pmd` | Run PMD source analysis |
+| `ant spotbugs` | Run SpotBugs bytecode analysis |
+| `ant coverage` | Run tests and generate JaCoCo coverage reports |
+| `ant quality` | Run tests, Checkstyle, PMD, SpotBugs, and JaCoCo |
+| `ant all` | Full pipeline: clean → quality → javadoc → jar |
 | `ant clean` | Remove all generated files |
 | `ant resolve` | Download JUnit 5 JARs to `lib/` (needed only if lib/ is absent) |
+| `ant resolve-tools` | Download quality-tool distributions to `lib/tools/` |
 
-## Quick Start
+## Quick Start for Students
 
 ```bash
 # 1. Clone the repository
@@ -62,13 +68,31 @@ cd SimulationModeling
 # 2. Compile and run tests
 ant test
 
-# 3. Build everything (clean + compile + test + javadoc + jar)
+# 3. Try the small example simulation
+java -cp build/classes simulation.examples.CountdownSimulation
+
+# 4. Run the full quality pipeline
+ant quality
+
+# 5. Build everything (clean + quality + javadoc + jar)
 ant all
 
-# 4. Open the generated API documentation
+# 6. Open the generated API documentation
 open docs/index.html   # macOS
 xdg-open docs/index.html  # Linux
 ```
+
+Expected example output:
+
+```text
+time 0.0: 5
+time 1.0: 4
+time 2.0: 3
+time 3.0: 2
+time 4.0: 1
+```
+
+If `ant test` succeeds, your development environment is ready.
 
 ## Extending the Simulation Framework
 
@@ -97,9 +121,28 @@ public class QueueingSimulation extends Simulation {
 }
 ```
 
-## Optional Build Tools
+See `src/main/java/simulation/examples/CountdownSimulation.java` for a
+complete runnable example.
 
-`build.xml` contains commented-out targets for:
+## Suggested First Student Tasks
+
+1. Run `ant test` and confirm all tests pass.
+2. Run `simulation.examples.CountdownSimulation`.
+3. Change the countdown length and rerun the example.
+4. Create a new simulation package for your assigned model.
+5. Add tests for any behavior you add or change.
+
+## Repository Hygiene
+
+- Commit source files, tests, documentation, and build configuration.
+- Do not commit generated `build/` or `docs/` files.
+- Keep dependency JARs in `lib/` unless your instructor gives different
+  course-specific instructions.
+- Run `ant test` before each commit.
+
+## Quality Tools
+
+The project includes enabled Ant targets for:
 
 | Tool | Purpose |
 |------|---------|
@@ -108,8 +151,16 @@ public class QueueingSimulation extends Simulation {
 | **PMD** | Source code analysis |
 | **JaCoCo** | Test coverage reporting |
 
-To enable any of these, download the corresponding JAR(s) to `lib/` and
-uncomment the relevant `<target>` in `build.xml`.
+Run everything with:
+
+```bash
+ant quality
+```
+
+The first run downloads tool distributions into `lib/tools/`. Those files are
+local build support and are ignored by Git. Reports are written under
+`build/reports/`, including JaCoCo HTML coverage at
+`build/reports/coverage/index.html`.
 
 ## Running Tests Independently
 

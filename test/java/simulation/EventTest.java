@@ -2,7 +2,9 @@ package simulation;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for {@link Event}.
@@ -11,10 +13,10 @@ import static org.junit.jupiter.api.Assertions.*;
 class EventTest {
 
     /** Concrete subclass used for testing. */
-    private static class TestEvent extends Event {
+    private static class StubEvent extends Event {
         boolean executed = false;
 
-        TestEvent(double time) {
+        StubEvent(double time) {
             super(time);
         }
 
@@ -27,53 +29,53 @@ class EventTest {
     @Test
     @DisplayName("constructor stores the scheduled time")
     void constructorStoresTime() {
-        Event e = new TestEvent(3.14);
+        Event e = new StubEvent(3.14);
         assertEquals(3.14, e.getTime(), 1e-9);
     }
 
     @Test
     @DisplayName("constructor accepts time zero")
     void constructorAcceptsZero() {
-        Event e = new TestEvent(0.0);
+        Event e = new StubEvent(0.0);
         assertEquals(0.0, e.getTime());
     }
 
     @Test
     @DisplayName("constructor rejects negative time")
     void constructorRejectsNegativeTime() {
-        assertThrows(IllegalArgumentException.class, () -> new TestEvent(-1.0));
+        assertThrows(IllegalArgumentException.class, () -> new StubEvent(-1.0));
     }
 
     @Test
     @DisplayName("compareTo: earlier event is less than later event")
     void compareToEarlierIsLess() {
-        Event early = new TestEvent(1.0);
-        Event late  = new TestEvent(2.0);
+        Event early = new StubEvent(1.0);
+        Event late  = new StubEvent(2.0);
         assertTrue(early.compareTo(late) < 0);
     }
 
     @Test
     @DisplayName("compareTo: later event is greater than earlier event")
     void compareToLaterIsGreater() {
-        Event early = new TestEvent(1.0);
-        Event late  = new TestEvent(2.0);
+        Event early = new StubEvent(1.0);
+        Event late  = new StubEvent(2.0);
         assertTrue(late.compareTo(early) > 0);
     }
 
     @Test
     @DisplayName("compareTo: equal times compare as zero")
     void compareToEqualIsZero() {
-        Event a = new TestEvent(5.0);
-        Event b = new TestEvent(5.0);
+        Event a = new StubEvent(5.0);
+        Event b = new StubEvent(5.0);
         assertEquals(0, a.compareTo(b));
     }
 
     @Test
     @DisplayName("toString contains the class name and time")
     void toStringContainsInfo() {
-        Event e = new TestEvent(2.5);
+        Event e = new StubEvent(2.5);
         String s = e.toString();
-        assertTrue(s.contains("TestEvent"), "should contain class name");
+        assertTrue(s.contains("StubEvent"), "should contain class name");
         assertTrue(s.contains("2.5") || s.contains("2.5000"), "should contain time");
     }
 }

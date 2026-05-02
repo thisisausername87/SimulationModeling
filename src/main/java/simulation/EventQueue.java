@@ -1,6 +1,7 @@
 package simulation;
 
 import java.util.PriorityQueue;
+import java.util.Queue;
 
 /**
  * A chronologically ordered queue of simulation {@link Event}s.
@@ -22,7 +23,7 @@ import java.util.PriorityQueue;
  */
 public class EventQueue {
 
-    private final PriorityQueue<Event> queue;
+    private final Queue<Event> queue;
 
     /**
      * Creates an empty event queue.
@@ -41,7 +42,9 @@ public class EventQueue {
         if (event == null) {
             throw new NullPointerException("Cannot schedule a null event");
         }
-        queue.offer(event);
+        if (!queue.offer(event)) {
+            throw new IllegalStateException("Unable to schedule event: " + event);
+        }
     }
 
     /**
