@@ -1,6 +1,3 @@
----
-layout: default
----
 # Simulation Modeling
 
 A scaffolding project for discrete-event simulation, designed for
