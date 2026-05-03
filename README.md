@@ -1,5 +1,5 @@
 ---
-layout: default
+theme: jekyll-theme-minimal
 title: Simulation Modeling
 repository: MetroCS/SimulationModeling
 ---
