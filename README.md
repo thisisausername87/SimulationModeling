@@ -1,3 +1,8 @@
+---
+layout: default
+title: Simulation Modeling
+repository: MetroCS/SimulationModeling
+---
 # Simulation Modeling
 
 A scaffolding project for discrete-event simulation, designed for
