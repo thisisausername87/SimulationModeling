@@ -296,6 +296,8 @@
              classpathref="pmd.classpath"/>
     <pmd rulesetfiles="pmd-ruleset.xml"
          failOnRuleViolation="true">
+      <formatter type="html" toFile="${reports.dir}/pmd.html"/>
+      <formatter type="summaryhtml" toFile="${reports.dir}/pmd-summary.html"/>
       <formatter type="xml" toFile="${reports.dir}/pmd.xml"/>
       <fileset dir="${src.main.dir}" includes="**/*.java"/>
       <fileset dir="${src.test.dir}" includes="**/*.java"/>
