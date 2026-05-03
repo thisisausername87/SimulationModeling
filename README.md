@@ -184,7 +184,7 @@ The program is provided “as is” and without warranty of any kind, either exp
 without even the implied warranty of merchantability and fitness for a particular purpose.
 
 The software is licensed under <a href="https://www.gnu.org/licenses/gpl-3.0.html">GPLv3</a>
-<a href="https://www.gnu.org/licenses/gpl-3.0.html"><img src="https://www.gnu.org/graphics/gplv3-with-text-84x42.png" align="middle"></a>
+<a href="https://www.gnu.org/licenses/gpl-3.0.html"><img src="https://www.gnu.org/graphics/gplv3-with-text-84x42.png" alt="GNU GPLv3 license badge"></a>
 
 This README document is licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>
 <img src="https://mirrors.creativecommons.org/presskit/buttons/88x31/png/by-sa.png" alt="CreativeCommons-BY-SA" width="110" align="middle">
