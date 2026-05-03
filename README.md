@@ -1,6 +1,7 @@
 ---
-theme: jekyll-theme-minimal
+theme: pages-themes/architect@v0.2.0
 title: Simulation Modeling
+description: Simulation Modeling for Algorithms and Algorithm Analysis
 repository: MetroCS/SimulationModeling
 ---
 # Simulation Modeling
