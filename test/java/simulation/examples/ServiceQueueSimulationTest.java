@@ -1,3 +1,7 @@
+/*
+*@author Toren Kochman
+*/
+
 package simulation.examples;
 
 import simulation.Event;
@@ -10,21 +14,16 @@ import java.util.Random;
  * Service Queue Simulation Example
  *
  * Features:
- * - Adjustable number of trials
- * - Adjustable model parameters
- * - Deterministic random seed support
- * - Clear printed results
- * - Simulation logic separated from output formatting
- *
- * This implementation is placed entirely in the
- * simulation.examples package as requested.
+ * Adjustable number of trials
+ * Adjustable randomized likelihoods
+ * Deterministic random seed support
+ * Clearly printed results
+ * Simulation logic separated from output formatting
  */
 
 public class ServiceQueueSimulation extends Simulation {
-
-    // =========================
+    
     // CONFIGURATION PARAMETERS
-    // =========================
 
     private final int timeSteps;
     private final double arrivalProbability;
@@ -107,17 +106,13 @@ public class ServiceQueueSimulation extends Simulation {
 
         for (int currentTime = 0; currentTime < timeSteps; currentTime++) {
 
-            // =========================
             // CUSTOMER ARRIVAL
-            // =========================
 
             if (random.nextDouble() < arrivalProbability) {
                 queue.add(currentTime);
             }
 
-            // =========================
             // SERVICE COMPLETION
-            // =========================
 
             if (!queue.isEmpty()) {
 
@@ -136,9 +131,7 @@ public class ServiceQueueSimulation extends Simulation {
                 idleTimeSteps++;
             }
 
-            // =========================
             // TRACK STATISTICS
-            // =========================
 
             int currentQueueLength = queue.size();
 
@@ -256,9 +249,7 @@ public class ServiceQueueSimulation extends Simulation {
 
         public static void main(String[] args) {
 
-            // =========================
-            // EASY-TO-MODIFY PARAMETERS
-            // =========================
+            // PARAMETERS
 
             int timeSteps = 100000;
 
@@ -270,9 +261,7 @@ public class ServiceQueueSimulation extends Simulation {
 
             Long randomSeed = 42L;
 
-            // =========================
             // CREATE AND RUN SIMULATION
-            // =========================
 
             ServiceQueueSimulation simulation =
                     new ServiceQueueSimulation(
