@@ -2,7 +2,6 @@ package simulation.examples;
 
 import simulation.Event;
 import simulation.Simulation;
-
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
